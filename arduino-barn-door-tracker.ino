@@ -9,6 +9,8 @@ const int A4988_FULL_STEP_STEPS_PER_RESOLUTION = 200;
 const double DISTANCE_HINGE_TO_ROD = 0.3; // meter
 const double ROD_PITCH = 0.5; // mm
 
+const int MOTOR_SPEED_HIGH_DELAY_MS = 10; // don't go full speed
+
 const int MAX_TRACK_MINUTES = 45;
 SpeedControlResult speeds[MAX_TRACK_MINUTES] = {};
 
@@ -29,7 +31,6 @@ void setup()
     Serial.begin(115200);
     Serial.println("Setup");
     motor.init();
-    motor.enable(true);
 
     Serial.print("AP4988 steps per resolution: ");
     Serial.println(motor.steps_per_resolution());
@@ -42,6 +43,9 @@ void setup()
     pinMode(SW6, INPUT);
 
     speed_ctrl.precompute();
+
+    motor.enable(true);
+    motor.set_direction(Direction::LEFT);
     Serial.println("Ready");
 }
 
@@ -125,7 +129,7 @@ void rewind()
             Serial.println(steps_taken/100);
         }
         motor.step();
-        delay(10); // don't go full speed
+        delay(MOTOR_SPEED_HIGH_DELAY_MS);
         steps_taken--;
     }
     Serial.println("");
@@ -144,6 +148,18 @@ void wait_for_user_confirm()
     }
 }
 
+void manual_motor_control(Button& btn, Direction dir)
+{
+    Serial.print("Manual drive: ");
+    Serial.println(dir == Direction::LEFT ? "left" : "right");
+    motor.set_direction(dir);
+    while (btn.is_pressed()) {
+        motor.step();
+        delay(MOTOR_SPEED_HIGH_DELAY_MS);
+    }
+    Serial.println("Ready again");
+}
+
 void loop()
 {
     if (sw1.is_pressed()) {
@@ -152,5 +168,11 @@ void loop()
         wait_for_user_confirm();
         rewind();
         Serial.println("Ready again");
+    }
+    if (sw6.is_pressed()) {
+        manual_motor_control(sw6, Direction::LEFT);
+    }
+    if (sw5.is_pressed()) {
+        manual_motor_control(sw5, Direction::RIGHT);
     }
 }
