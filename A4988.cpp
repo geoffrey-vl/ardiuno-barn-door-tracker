@@ -1,7 +1,7 @@
 #include "A4988.h"
 #include <Arduino.h>
 
-const int STEP_INTERVAL = 50;
+const int STEP_INTERVAL = 1;
 
 A4988::A4988(int pin_dir, int pin_step, int pin_enable, int steps_per_resolution) :
     _pin_dir(pin_dir),
