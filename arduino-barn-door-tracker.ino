@@ -23,7 +23,6 @@ Button sw5(SW5);
 Button sw6(SW6);
 
 int steps_taken = 0;
-bool tracker_reached_end = false;
 
 void setup()
 {
@@ -82,7 +81,6 @@ void compensate_earth()
     Serial.println("Compensating Earth");
     const unsigned long MILLIS_PER_MINUTE = 60 * 1000UL;
     int minutes_passed = 0;
-    tracker_reached_end = false;
     int steps_to_do = speeds[minutes_passed].steps_per_minute;
     int step_timespan = MILLIS_PER_MINUTE / steps_to_do;
     unsigned long start_time = millis();
@@ -95,7 +93,6 @@ void compensate_earth()
             minutes_passed++;
             if (minutes_passed > MAX_TRACK_MINUTES) {
                 Serial.println("End reached");
-                tracker_reached_end = true;
                 return;
             }
             steps_to_do = speeds[minutes_passed].steps_per_minute;
@@ -110,9 +107,10 @@ void compensate_earth()
         motor.step();
         steps_taken++;
 
-        // check if we need to stop
+        // check if user requested to stop
         if (sw1.is_pressed()) {
             sw1.wait_for_release();
+            Serial.println("User interrupted");
             return;
         }
     }
@@ -134,19 +132,24 @@ void rewind()
     toggleDirection();
 }
 
+void wait_for_user_confirm()
+{
+    while (true) {
+        // tracker reached end, wait for user to command 'rewind'
+        delay(10);
+        if (sw1.is_pressed()) {
+            sw1.wait_for_release();
+            return;
+        }
+    }
+}
+
 void loop()
 {
     if (sw1.is_pressed()) {
         sw1.wait_for_release();
         compensate_earth();
-        while (tracker_reached_end) {
-            // tracker reached end, wait for user to command 'rewind'
-            delay(10);
-            if (sw1.is_pressed()) {
-                sw1.wait_for_release();
-                tracker_reached_end = false;
-            }
-        }
+        wait_for_user_confirm();
         rewind();
         Serial.println("Ready again");
     }
