@@ -18,9 +18,6 @@ A4988 motor(PIN_DIR_MOTOR_C, PIN_STEP_MOTOR_C, PIN_ENABLE_MOTOR_C, A4988_FULL_ST
 SpeedControl speed_ctrl(DISTANCE_HINGE_TO_ROD, ROD_PITCH, A4988_FULL_STEP_STEPS_PER_RESOLUTION, speeds, MAX_TRACK_MINUTES);
 
 Button sw1(SW1);
-Button sw2(SW2);
-Button sw3(SW3);
-Button sw4(SW4);
 Button sw5(SW5);
 Button sw6(SW6);
 
@@ -36,9 +33,6 @@ void setup()
     Serial.println(motor.steps_per_resolution());
 
     pinMode(SW1, INPUT);
-    pinMode(SW2, INPUT);
-    pinMode(SW3, INPUT);
-    pinMode(SW4, INPUT);
     pinMode(SW5, INPUT);
     pinMode(SW6, INPUT);
 
