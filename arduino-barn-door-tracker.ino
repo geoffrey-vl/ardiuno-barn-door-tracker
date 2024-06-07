@@ -133,6 +133,10 @@ void rewind()
         motor.step();
         delay(high_speed_delay_ms);
         steps_taken--;
+        if (sw1.is_pressed()) {
+            sw1.wait_for_release();
+            break;
+        }
     }
     Serial.println("");
     toggleDirection();
