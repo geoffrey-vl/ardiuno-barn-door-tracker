@@ -3,12 +3,13 @@
 
 const int STEP_INTERVAL = 1;
 
-A4988::A4988(int pin_dir, int pin_step, int pin_enable, int steps_per_resolution) :
+A4988::A4988(int pin_dir, int pin_step, int pin_enable, MicrostepResolution microstep_resolution, int motor_steps_per_resolution) :
     _pin_dir(pin_dir),
     _pin_step(pin_step),
     _pin_enable(pin_enable),
     _direction(Direction::LEFT),
-    _steps_per_resolution(steps_per_resolution)
+    _microstepping_resolution(microstep_resolution),
+    _motor_steps_per_resolution(motor_steps_per_resolution)
 {
 }
 
@@ -24,9 +25,16 @@ void A4988::init()
     set_dir_pin();
 }
 
-int A4988::steps_per_resolution()
+MicrostepResolution A4988::microstepping_resolution()
 {
-    return _steps_per_resolution;
+    return _microstepping_resolution;
+}
+
+int A4988::effective_steps_per_resolution()
+{
+    if (_microstepping_resolution == MicrostepResolution::HALF)
+        return _motor_steps_per_resolution * 2;
+    return _motor_steps_per_resolution;
 }
 
 void A4988::step()

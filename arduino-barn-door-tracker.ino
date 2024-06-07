@@ -4,24 +4,25 @@
 #include "Button.h"
 #include <math.h>
 
-const int A4988_FULL_STEP_STEPS_PER_RESOLUTION = 200;
+// WANTAI_42BYGHW811
+const int MOTOR_FULL_STEP_STEPS_PER_RESOLUTION = 200;
 
-const double DISTANCE_HINGE_TO_ROD = 0.3; // meter
-const double ROD_PITCH = 0.5; // mm
-
-const int MOTOR_SPEED_HIGH_DELAY_MS = 10; // don't go full speed
+const double DISTANCE_HINGE_TO_PLANK = 0.012; // meter
+const double DISTANCE_HINGE_TO_ROD = 0.317 + DISTANCE_HINGE_TO_PLANK; // meter
+const double ROD_PITCH = 0.8; // mm, M5 see https://fullerfasteners.com/tech/basic-metric-thread-chart-m1-m100-2/
 
 const int MAX_TRACK_MINUTES = 45;
 SpeedControlResult speeds[MAX_TRACK_MINUTES] = {};
 
-A4988 motor(PIN_DIR_MOTOR_C, PIN_STEP_MOTOR_C, PIN_ENABLE_MOTOR_C, A4988_FULL_STEP_STEPS_PER_RESOLUTION);
-SpeedControl speed_ctrl(DISTANCE_HINGE_TO_ROD, ROD_PITCH, A4988_FULL_STEP_STEPS_PER_RESOLUTION, speeds, MAX_TRACK_MINUTES);
+A4988 motor(PIN_DIR_MOTOR_C, PIN_STEP_MOTOR_C, PIN_ENABLE_MOTOR_C, MicrostepResolution::HALF, MOTOR_FULL_STEP_STEPS_PER_RESOLUTION);
+SpeedControl speed_ctrl(DISTANCE_HINGE_TO_ROD, ROD_PITCH, motor.effective_steps_per_resolution(), speeds, MAX_TRACK_MINUTES);
 
 Button sw1(SW1);
 Button sw5(SW5);
 Button sw6(SW6);
 
 int steps_taken = 0;
+int high_speed_delay_ms = 0;
 
 void setup()
 {
@@ -29,14 +30,20 @@ void setup()
     Serial.println("Setup");
     motor.init();
 
-    Serial.print("AP4988 steps per resolution: ");
-    Serial.println(motor.steps_per_resolution());
+    Serial.print("AP4988 effective steps per resolution: ");
+    Serial.println(motor.effective_steps_per_resolution());
 
     pinMode(SW1, INPUT);
     pinMode(SW5, INPUT);
     pinMode(SW6, INPUT);
 
     speed_ctrl.precompute();
+
+    // don't go full speed
+    high_speed_delay_ms = 10;
+    if (motor.microstepping_resolution() == MicrostepResolution::HALF) {
+        high_speed_delay_ms = 5;
+    }
 
     motor.enable(true);
     motor.set_direction(Direction::LEFT);
@@ -79,6 +86,7 @@ void compensate_earth()
     Serial.println("Compensating Earth");
     const unsigned long MILLIS_PER_MINUTE = 60 * 1000UL;
     int minutes_passed = 0;
+    steps_taken = 0;
     int steps_to_do = speeds[minutes_passed].steps_per_minute;
     int step_timespan = MILLIS_PER_MINUTE / steps_to_do;
     unsigned long start_time = millis();
@@ -123,7 +131,7 @@ void rewind()
             Serial.println(steps_taken/100);
         }
         motor.step();
-        delay(MOTOR_SPEED_HIGH_DELAY_MS);
+        delay(high_speed_delay_ms);
         steps_taken--;
     }
     Serial.println("");
@@ -149,7 +157,7 @@ void manual_motor_control(Button& btn, Direction dir)
     motor.set_direction(dir);
     while (btn.is_pressed()) {
         motor.step();
-        delay(MOTOR_SPEED_HIGH_DELAY_MS);
+        delay(high_speed_delay_ms);
     }
     Serial.println("Ready again");
 }

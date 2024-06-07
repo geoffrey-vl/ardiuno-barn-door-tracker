@@ -6,22 +6,29 @@ enum class Direction {
     RIGHT
 };
 
+enum class MicrostepResolution {
+    FULL,
+    HALF
+};
+
 class A4988 {
 public:
-    A4988(int pin_dir, int pin_step, int pin_enable, int steps_per_revolution);
+    A4988(int pin_dir, int pin_step, int pin_enable, MicrostepResolution microstep_resolution, int motor_steps_per_resolution);
     void init();
     void step();
     Direction direction();
     void set_direction(Direction dir);
     void enable(bool enable);
-    int steps_per_resolution();
+    int effective_steps_per_resolution();
+    MicrostepResolution microstepping_resolution();
 
 private:
     int _pin_dir;
     int _pin_step;
     int _pin_enable;
     Direction _direction;
-    int _steps_per_resolution;
+    MicrostepResolution _microstepping_resolution;
+    int _motor_steps_per_resolution;
 
     void set_dir_pin();
 };
