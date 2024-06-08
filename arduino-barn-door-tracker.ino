@@ -42,9 +42,9 @@ void setup()
     speed_ctrl.precompute();
 
     // don't go full speed
-    high_speed_delay_ms = 10;
+    high_speed_delay_ms = 5;
     if (motor.microstepping_resolution() == MicrostepResolution::HALF) {
-        high_speed_delay_ms = 5;
+        high_speed_delay_ms = high_speed_delay_ms / 2;
     }
 
     motor.enable(true);
