@@ -18,6 +18,7 @@ A4988 motor(PIN_DIR_MOTOR_C, PIN_STEP_MOTOR_C, PIN_ENABLE_MOTOR_C, MicrostepReso
 SpeedControl speed_ctrl(DISTANCE_HINGE_TO_ROD, ROD_PITCH, motor.effective_steps_per_resolution(), speeds, MAX_TRACK_MINUTES);
 
 Button sw1(SW1);
+Button sw4(SW4);
 Button sw5(SW5);
 Button sw6(SW6);
 
@@ -34,6 +35,7 @@ void setup()
     Serial.println(motor.effective_steps_per_resolution());
 
     pinMode(SW1, INPUT);
+    pinMode(SW4, INPUT);
     pinMode(SW5, INPUT);
     pinMode(SW6, INPUT);
 
@@ -175,10 +177,14 @@ void loop()
         rewind();
         Serial.println("Ready again");
     }
-    if (sw6.is_pressed()) {
-        manual_motor_control(sw6, Direction::LEFT);
+    if (sw4.is_pressed()) {
+        sw4.wait_for_release();
+        toggleDirection();
     }
     if (sw5.is_pressed()) {
         manual_motor_control(sw5, Direction::RIGHT);
+    }
+    if (sw6.is_pressed()) {
+        manual_motor_control(sw6, Direction::LEFT);
     }
 }
